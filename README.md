@@ -26,10 +26,15 @@ version stop receiving updates**. Renovate resolves the dependency's
 ## How to run
 
 1. Create a new **public** GitHub repo and push these files to the default branch.
-2. Go to **Actions → "Renovate NuGet regression repro" → Run workflow**.
-   (Default `GITHUB_TOKEN` is enough — dry-run only reads the repo; the version
-   lookup hits nuget.org and needs no token.)
-3. Open the run and compare the two matrix jobs' logs.
+2. Create a **Personal Access Token** and add it as an Actions secret named
+   `RENOVATE_TOKEN` (**Settings → Secrets and variables → Actions → New repository
+   secret**). The default `GITHUB_TOKEN` does **not** work — Renovate's repo-init
+   GraphQL query fails with `FORBIDDEN: Resource not accessible by integration`.
+   - **Classic PAT:** scope `repo` (or just `public_repo` for a public repo).
+   - **Fine-grained PAT:** grant this repo **Contents: Read** and
+     **Metadata: Read** (add Issues/Pull requests: Read if you switch to live PRs).
+3. Go to **Actions → "Renovate NuGet regression repro" → Run workflow**.
+4. Open the run and compare the two matrix jobs' logs.
 
 ## What to look for
 
@@ -70,10 +75,13 @@ time; the point is `currentVersion` ≠ the pinned `13.0.1` and `updates: []`.)
 ## Optional: prove it with real PRs instead of dry-run
 
 If you'd rather see an actual PR appear on the good version and none on the bad
-one, in `.github/workflows/renovate-repro.yml`:
+one:
 
-- change `permissions:` to `contents: write` and `pull-requests: write`, and
-- remove the `RENOVATE_DRY_RUN: "full"` line.
+- remove the `RENOVATE_DRY_RUN: "full"` line from
+  `.github/workflows/renovate-repro.yml`, and
+- make sure `RENOVATE_TOKEN` can write: a **classic** PAT with `repo` already
+  can; a **fine-grained** PAT additionally needs **Contents: Write** and
+  **Pull requests: Write**.
 
 The `43.207.4` job will open a `Update dependency Newtonsoft.Json` PR; the
 `43.211.0` job will open none. (Run the two versions in separate dispatches if

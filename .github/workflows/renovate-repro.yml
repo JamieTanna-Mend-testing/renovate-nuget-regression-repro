@@ -30,7 +30,10 @@ jobs:
         uses: renovatebot/github-action@v46.1.14
         with:
           configurationFile: renovate.json
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # A Personal Access Token (repo store secret RENOVATE_TOKEN) is required.
+          # The default GITHUB_TOKEN is NOT sufficient: Renovate's repo-init GraphQL
+          # query fails with "Resource not accessible by integration".
+          token: ${{ secrets.RENOVATE_TOKEN }}
           renovate-version: ${{ matrix.renovateVersion }}
         env:
           LOG_LEVEL: debug
