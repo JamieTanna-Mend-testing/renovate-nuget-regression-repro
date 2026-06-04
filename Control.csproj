@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- CONTROL CASE: same package, same target, but a BRACKETED exact range.
+         NuGet's isSingleVersion("[13.0.1]") === true (nuget-exact-range), so the
+         #43737 guard does not misfire and currentVersion stays 13.0.1.
+         This dependency must receive an update on BOTH Renovate versions —
+         isolating the regression to the bare-version form in Example.csproj. -->
+    <PackageReference Include="Newtonsoft.Json" Version="[13.0.1]" />
+  </ItemGroup>
+
+</Project>

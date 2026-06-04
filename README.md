@@ -19,9 +19,13 @@ version stop receiving updates**. Renovate resolves the dependency's
 
 | File | Purpose |
 |------|---------|
-| `Example.csproj` | One `PackageReference` pinned to `Newtonsoft.Json` `13.0.1` (older than the latest stable on nuget.org). Uses the **default `nuget` manager** and the **public nuget.org feed** — no custom managers, no private registry. |
+| `Example.csproj` | **Bug case** — `Newtonsoft.Json` pinned to a **bare** version `13.0.1`. |
+| `Control.csproj` | **Control case** — same package/target, but a **bracketed exact range** `[13.0.1]`. Must update on *both* versions, isolating the bug to bare versions. |
 | `renovate.json` | Minimal config (`config:recommended`, onboarding off). |
 | `.github/workflows/renovate-repro.yml` | Runs Renovate in **dry-run** against this repo with `43.207.4` and `43.211.0` side-by-side (matrix). |
+
+Both project files use the **default `nuget` manager** and the **public nuget.org
+feed** — no custom managers, no private registry.
 
 ## How to run
 
@@ -38,23 +42,19 @@ version stop receiving updates**. Renovate resolves the dependency's
 
 ## What to look for
 
-Search each job's log for `Newtonsoft.Json` and `flattened update`.
+Each version job evaluates **both** project files, so you get a 2×2 result.
+Expected outcome:
 
-**`renovate 43.207.4` (working) — expect an update is found:**
+| Renovate version | `Example.csproj` (bare `13.0.1`) | `Control.csproj` (bracketed `[13.0.1]`) |
+|------------------|----------------------------------|------------------------------------------|
+| `43.207.4` (good)     | ✅ update found | ✅ update found |
+| `43.211.0` (regressed)| ❌ **no update** | ✅ update found |
 
-```
-DEBUG: Dependency Newtonsoft.Json has currentVersion 13.0.1
-DEBUG: 1 flattened update(s) found: Newtonsoft.Json
-INFO:  DRY-RUN: Would create PR: Update dependency Newtonsoft.Json to 13.0.3
-```
+The decisive cell is the bottom-left: the bracketed form still updates on
+`43.211.0`, but the bare form does not — so the regression is specific to bare
+NuGet versions, not to the package or the feed.
 
-**`renovate 43.211.0` (regressed) — expect NO update:**
-
-```
-DEBUG: 0 flattened updates found:
-```
-
-and in the package-file dump the dependency shows the pinned value as
+In the **`43.211.0`** job, the bare dependency shows the pinned value as
 `currentValue` but the *latest* release as `currentVersion`, with an empty
 `updates` array:
 
@@ -62,6 +62,7 @@ and in the package-file dump the dependency shows the pinned value as
 {
   "depName": "Newtonsoft.Json",
   "currentValue": "13.0.1",
+  "packageFile": "Example.csproj",
   "datasource": "nuget",
   "versioning": "nuget",
   "updates": [],
@@ -69,8 +70,23 @@ and in the package-file dump the dependency shows the pinned value as
 }
 ```
 
+while the bracketed control still resolves correctly and yields an update:
+
+```json
+{
+  "depName": "Newtonsoft.Json",
+  "currentValue": "[13.0.1]",
+  "packageFile": "Control.csproj",
+  "updates": [{ "newValue": "[13.0.3]", "newVersion": "13.0.3" }]
+}
+```
+
+The `43.207.4` job instead logs `flattened update(s) found` for **both** files
+(and, with dry-run, `DRY-RUN: Would create PR: Update dependency Newtonsoft.Json`).
+
 (Exact version numbers depend on the latest Newtonsoft.Json on nuget.org at run
-time; the point is `currentVersion` ≠ the pinned `13.0.1` and `updates: []`.)
+time; the point is the bare case has `currentVersion` ≠ pinned `13.0.1` with
+`updates: []`, while the bracketed case still updates.)
 
 ## Optional: prove it with real PRs instead of dry-run
 
