@@ -1,0 +1,25 @@
+# Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+
+# NuGet
+*.nupkg
+packages/
+.nuget/
+
+# Renovate local run artifacts (in case you ever run it locally)
+renovate/
+.renovate/
+renovate.log
+
+# IDE / editor
+.vs/
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
