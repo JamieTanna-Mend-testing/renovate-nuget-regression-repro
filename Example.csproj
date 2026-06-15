@@ -9,7 +9,7 @@
          Newer stable versions exist on nuget.org (e.g. 13.0.3).
          A working Renovate must offer an update; the regressed version does not.
          Compare against the bracketed control in Control.csproj. -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
 </Project>
